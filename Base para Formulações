@@ -1,0 +1,49 @@
+import streamlit as st
+import pandas as pd
+
+st.set_page_config(page_title="Calculadora de PPM para Filmes de Polietileno", layout="centered")
+st.title("🧪 Calculadora de PPM para Filmes Flexíveis de Polietileno")
+
+# Entrada de massa total
+massa_total_kg = st.number_input("Massa total da formulação (kg):", min_value=1, value=1000)
+massa_total_g = massa_total_kg * 1000
+
+st.markdown("---")
+st.subheader("🔧 Aditivos")
+
+# Aditivos iniciais
+default_aditivos = {
+    "Pigmento amarelo": 500,
+    "Deslizante": 1000,
+    "Antibloqueio": 1500,
+    "Antioxidante": 800,
+    "Antiestático": 600
+}
+
+# Interface para aditivos
+data = []
+total_aditivos_g = 0
+for nome, ppm in default_aditivos.items():
+    ppm_input = st.number_input(f"{nome} (ppm):", min_value=0, value=ppm)
+    massa_aditivo = ppm_input * massa_total_kg / 1  # pois 1 ppm = 1g/1000kg
+    porcentagem = massa_aditivo / massa_total_g
+    total_aditivos_g += massa_aditivo
+    data.append([nome, ppm_input, massa_aditivo, porcentagem])
+
+# DataFrame e exibição
+st.markdown("---")
+st.subheader("📊 Resultados")
+df = pd.DataFrame(data, columns=["Componente", "PPM", "Massa (g)", "% na formulação"])
+df["% na formulação"] = df["% na formulação"] * 100
+st.dataframe(df.style.format({"PPM": "{:.0f}", "Massa (g)": "{:.2f}", "% na formulação": "{:.4f}%"}))
+
+# Massa de PE base
+massa_pe_base = massa_total_g - total_aditivos_g
+porcentagem_pe = massa_pe_base / massa_total_g * 100
+
+st.success(f"Polietileno base: {massa_pe_base:.2f} g ({porcentagem_pe:.4f}%)")
+
+# Gráfico
+st.markdown("---")
+st.subheader("📈 Gráfico de composição")
+st.bar_chart(df.set_index("Componente")["% na formulação"])
